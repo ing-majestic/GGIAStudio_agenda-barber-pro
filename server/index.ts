@@ -19,7 +19,7 @@ import blockedTimesRouter from './routes/blocked_times.js';
 import settingsRouter     from './routes/settings.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT      = Number(process.env.PORT ?? 3002);
+const PORT      = Number(process.env.PORT ?? 5000);
 const IS_PROD   = process.env.NODE_ENV === 'production';
 
 // ── Database bootstrap ───────────────────────────────────────────────────

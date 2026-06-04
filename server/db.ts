@@ -1,21 +1,75 @@
 /**
- * Database: PostgreSQL via postgres.js
- * On Replit: DATABASE_URL is injected automatically from the Replit Postgres addon.
- * Locally: set DATABASE_URL in .env (e.g. postgres://user:pass@localhost:5432/barber)
- * shopId column on every table ensures multi-tenant upgrade is non-breaking.
+ * Database: PostgreSQL via pg (node-postgres)
+ * On Replit: DATABASE_URL is injected automatically.
+ * Locally: set DATABASE_URL in .env
  */
-import postgres from 'postgres';
+import { Pool } from 'pg';
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
 }
 
-export const sql = postgres(process.env.DATABASE_URL, {
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
   max: 10,
-  idle_timeout: 30,
-  connect_timeout: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
 });
+
+// Template literal wrapper compatible with postgres.js syntax
+export function sql<T = Record<string, unknown>>(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): Promise<T[]> {
+  const query = strings.reduce((acc, str, i) => {
+    if (i < values.length) {
+      return acc + str + '$' + (i + 1);
+    }
+    return acc + str;
+  }, '');
+
+  return pool.query(query, values).then(res => res.rows as T[]);
+}
+
+// sql-first: convenience for single-row queries
+sql.first = async <T = Record<string, unknown>>(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): Promise<T | undefined> => {
+  const rows = await sql<T>(strings, ...values);
+  return rows[0];
+};
+
+// sql.begin: simple transaction wrapper
+sql.begin = async <T>(fn: (sql: typeof sql) => Promise<T>): Promise<T> => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const txSql = (strings: TemplateStringsArray, ...vals: unknown[]) => {
+      const query = strings.reduce((acc, str, i) => {
+        if (i < vals.length) {
+          return acc + str + '$' + (i + 1);
+        }
+        return acc + str;
+      }, '');
+      return client.query(query, vals).then(res => res.rows as Record<string, unknown>[]);
+    };
+    const result = await fn(txSql as unknown as typeof sql);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+};
+
+// sql.end: close pool
+sql.end = async (): Promise<void> => {
+  await pool.end();
+};
 
 export async function migrate(): Promise<void> {
   await sql`
