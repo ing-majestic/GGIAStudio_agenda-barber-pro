@@ -10,7 +10,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { initDb, migrate } from './db.js';
+import { migrate } from './db.js';
 import { seedIfEmpty } from './seed.js';
 import servicesRouter     from './routes/services.js';
 import clientsRouter      from './routes/clients.js';
@@ -22,8 +22,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT      = Number(process.env.PORT ?? 3002);
 const IS_PROD   = process.env.NODE_ENV === 'production';
 
-// ── Database bootstrap (async init required for sql.js WASM) ─────────────
-await initDb();
+// ── Database bootstrap ───────────────────────────────────────────────────
 await migrate();
 await seedIfEmpty();
 
