@@ -19,7 +19,7 @@ import blockedTimesRouter from './routes/blocked_times.js';
 import settingsRouter     from './routes/settings.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT      = Number(process.env.PORT ?? 3001);
+const PORT      = Number(process.env.PORT ?? 3002);
 const IS_PROD   = process.env.NODE_ENV === 'production';
 
 // ── Database bootstrap (async init required for sql.js WASM) ─────────────
@@ -34,7 +34,7 @@ app.use(express.json());
 
 // CORS: in dev allow the vite frontend origin; in prod same-origin so no CORS needed
 if (!IS_PROD) {
-  app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+  app.use(cors({ origin: ['http://localhost:3000', 'http://localhost:5173'], credentials: true }));
 }
 
 // ── API routes ────────────────────────────────────────────────────────────

@@ -54,7 +54,8 @@ class PreparedStatement {
     if (bindParams.length > 0) stmt.bind(bindParams as any);
     const rows: Record<string, unknown>[] = [];
     while (stmt.step()) {
-      rows.push(stmt.getAsObject({}) as Record<string, unknown>);
+      // getAsObject() without args reads the current row buffer without resetting bindings
+      rows.push(stmt.getAsObject() as Record<string, unknown>);
     }
     stmt.free();
     return rows;
