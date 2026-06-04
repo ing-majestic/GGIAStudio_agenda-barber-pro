@@ -1,0 +1,6 @@
+{
+  "name": "Agenda Barber Pro",
+  "description": "Gestión operativa de citas, disponibilidad y bloqueos para barberos independientes. Backend Node.js + Express + SQLite. Plantillas WhatsApp manuales.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

@@ -1,0 +1,19 @@
+node_modules/
+build/
+dist/
+dist-server/
+coverage/
+.DS_Store
+Thumbs.db
+*.log
+.env*
+!.env.example
+
+# SQLite database (not versioned — auto-generated from seed)
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# TypeScript incremental build cache
+*.tsbuildinfo
